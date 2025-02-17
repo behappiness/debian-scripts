@@ -21,10 +21,12 @@ averageloadupscaletime=3					# time to get average CPU load value in order to up
 averageloaddownscaletime=10					# time to get average CPU load value in order to downscale
 
 lowloadgouvernor=powersave		# CPU Scheduler to use when low usage
-upscalevalue=50					# At wich usage when LOW load gouvernor is set the CPU will upscale to high load
+loweep=balance_power			# default performance balance_performance balance_power power
+upscalevalue=25					# At wich usage when LOW load gouvernor is set the CPU will upscale to high load
 
-highloadgouvernor=schedutil		# CPU Scheduler to use when low usage
-downscalevalue=10				# At wich usage when HIGH load gouvernor is set the CPU will downscale to low load
+highloadgouvernor=performance		# CPU Scheduler to use when low usage
+higheep=performance			# default performance balance_performance balance_power power
+downscalevalue=15				# At wich usage when HIGH load gouvernor is set the CPU will downscale to low load
 # --------------------- Settings -------------------------------------
 # ------------------- Env Variables ----------------------------------
 execdir=$(dirname $0)
@@ -56,6 +58,7 @@ fi
 while true; do 
 # --------------------- loop Variables ------------------------------------
 actualgouvernor=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+actualeep=$(cat /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference)
 date=$(date +%Y_%m_%d-%H_%M_%S)
 # --------------------- loop Variables ------------------------------------
 # In order to not rank up or down too fast, define the average value to use
@@ -71,6 +74,7 @@ if echo "$actualgouvernor" | grep -Eqi "$lowloadgouvernor"; then
 		echo "- $date - Upscaling CPU power to $highloadgouvernor at $upscalevalue% CPU load" >> $execdir/cpu_scale.log
 		echo "- $date - Upscaling CPU power to $highloadgouvernor at $upscalevalue% CPU load"
 		echo "$highloadgouvernor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+  		# echo "$higheep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference # Cannot set EEP in Performance gouvernor
 	fi
 # If the actual gouvernor is the high load gouvernor, check if value is under downscale value
 elif echo "$actualgouvernor" | grep -Eqi "$highloadgouvernor"; then
@@ -78,12 +82,14 @@ elif echo "$actualgouvernor" | grep -Eqi "$highloadgouvernor"; then
 		echo "- $date - Downscaling CPU power to $lowloadgouvernor at $downscalevalue% CPU load" >> $execdir/cpu_scale.log
 		echo "- $date - Downscaling CPU power to $lowloadgouvernor at $downscalevalue% CPU load"
 		echo "$lowloadgouvernor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+  		echo "$loweep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference
 	fi
 # If none of the above, define the low load CPU Gouvernor
 else 
 	echo "- $date - auto set low load gouvernor" >> $execdir/cpu_scale.log
 	echo "$lowloadgouvernor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+ 	echo "$loweep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference
 fi
 
-echo "- CPU USAGE: $cpuload% - Gouvernor: $actualgouvernor"
+echo "- CPU USAGE: $cpuload% - Gouvernor: $actualgouvernor - EEP: $"
 done
