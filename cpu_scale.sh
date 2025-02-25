@@ -74,6 +74,9 @@ if echo "$actualgouvernor" | grep -Eqi "$lowloadgouvernor"; then
 		echo "$date - Upscaling CPU power to $highloadgouvernor at $upscalevalue% CPU load" >> $execdir/cpu_scale.log
 		echo "$highloadgouvernor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
   		# echo "$higheep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference # Cannot set EEP in Performance gouvernor
+    	else ! echo "$actualeep" | grep -Eqi "$loweep"; then
+     		echo "$date - Set EEP to $loweep as it is different than it should be" >> $execdir/cpu_scale.log
+     		echo "$loweep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference
 	fi
 # If the actual gouvernor is the high load gouvernor, check if value is under downscale value
 elif echo "$actualgouvernor" | grep -Eqi "$highloadgouvernor"; then
