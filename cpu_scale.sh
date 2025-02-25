@@ -30,27 +30,27 @@ downscalevalue=15				# At wich usage when HIGH load gouvernor is set the CPU wil
 # --------------------- Settings -------------------------------------
 # ------------------- Env Variables ----------------------------------
 execdir=$(dirname $0)
+date=$(date +%Y_%m_%d-%H_%M_%S)
 # ------------------- Env Variables ----------------------------------
 if [ $(dpkg-query -W -f='${Status}' sysstat 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
 	apt-get install -y sysstat;
 fi
-echo "- Starting Script" >> $execdir/cpu_scale.log
 
 # Ensuring needed gouvernors are available
 if cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | grep -qi $lowloadgouvernor; then
 		if cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | grep -qi $highloadgouvernor; then
-		echo "- Starting Script" 
+		echo "$date - Starting Script" >> $execdir/cpu_scale.log
 	else 
-		echo "- Missing CPU Gouvernor $highloadgouvernor - check in logs for the list of availables ones on your system"
-  		echo "- Available gouvernors:"
-		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+		echo "$date - Missing CPU Gouvernor $highloadgouvernor - check in logs for the list of availables ones on your system" >> $execdir/cpu_scale.log
+  		echo "$date - Available gouvernors:" >> $execdir/cpu_scale.log
+		cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors >> $execdir/cpu_scale.log
 		sleep 5
 		exit
 	fi
 else 
-	echo "- Missing CPU Gouvernor $lowloadgouvernor - check in logs for the list of availables ones on your system" 
-   	echo "- Available gouvernors:"
-	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+	echo "$date - Missing CPU Gouvernor $lowloadgouvernor - check in logs for the list of availables ones on your system"  >> $execdir/cpu_scale.log
+   	echo "$date - Available gouvernors:" >> $execdir/cpu_scale.log
+	cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors >> $execdir/cpu_scale.log
 	sleep 5
 	exit
 fi
@@ -71,25 +71,22 @@ fi
 # If the actual gouvernor is the low load gouvernor, check if CPU load is above upscale value
 if echo "$actualgouvernor" | grep -Eqi "$lowloadgouvernor"; then
 	if (( $(echo "$cpuload > $upscalevalue"))); then
-		echo "- $date - Upscaling CPU power to $highloadgouvernor at $upscalevalue% CPU load" >> $execdir/cpu_scale.log
-		echo "- $date - Upscaling CPU power to $highloadgouvernor at $upscalevalue% CPU load"
+		echo "$date - Upscaling CPU power to $highloadgouvernor at $upscalevalue% CPU load" >> $execdir/cpu_scale.log
 		echo "$highloadgouvernor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
   		# echo "$higheep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference # Cannot set EEP in Performance gouvernor
 	fi
 # If the actual gouvernor is the high load gouvernor, check if value is under downscale value
 elif echo "$actualgouvernor" | grep -Eqi "$highloadgouvernor"; then
 	if (( $(echo "$cpuload < $downscalevalue"))) ; then
-		echo "- $date - Downscaling CPU power to $lowloadgouvernor at $downscalevalue% CPU load" >> $execdir/cpu_scale.log
-		echo "- $date - Downscaling CPU power to $lowloadgouvernor at $downscalevalue% CPU load"
+		echo "$date - Downscaling CPU power to $lowloadgouvernor at $downscalevalue% CPU load" >> $execdir/cpu_scale.log
 		echo "$lowloadgouvernor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
   		echo "$loweep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference
 	fi
 # If none of the above, define the low load CPU Gouvernor
 else 
-	echo "- $date - auto set low load gouvernor" >> $execdir/cpu_scale.log
+	echo "$date - auto set low load gouvernor" >> $execdir/cpu_scale.log
 	echo "$lowloadgouvernor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
  	echo "$loweep" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference
 fi
 
-echo "- CPU USAGE: $cpuload% - Gouvernor: $actualgouvernor - EEP: $"
 done
