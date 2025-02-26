@@ -2,12 +2,13 @@
 
 # Tonton Jo - 2023
 # Join me on Youtube: https://www.youtube.com/c/tontonjo
+# source: https://github.com/Tontonjo/proxmox
 
 # Usage:
 # put script where you want it to be executed
 # chmod +x /path/to/cpu_scale.sh
 # Edit crontab to run script at every reboot ->
-# @reboot  bash "/path/to/cpu_scale.sh" >/dev/null 2>&1"
+# @reboot  sleep 60 && bash /path/to/cpu_scale.sh
 # Reboot
 # Test :)
 
@@ -15,6 +16,7 @@
 # Version 1.1: Loop is better than cron, will run everytime the script end
 # Version 1.2: Use sar to get accurate average cpu load value
 # Version 1.3: ensure the gouvernor is available
+# Version 1.4: add EEP for AMD to the script
 
 # --------------------- Settings ------------------------------------
 averageloadupscaletime=3					# time to get average CPU load value in order to upscale
