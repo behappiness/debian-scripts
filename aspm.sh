@@ -76,7 +76,7 @@ function enable_aspm_for_devices() {
                 echo ""
             elif [ "$EXECUTE" = true ]; then
                 echo "Enabling ASPM for device $device_id with setting $aspm_setting ($aspm_description)"
-                ./enable_aspm.sh -e "$device_id" -s "$aspm_setting"
+                /root/scripts/enable_aspm.sh -e "$device_id" -s "$aspm_setting"
             fi
         else
             if [ "$DRY_RUN" = true ]; then
